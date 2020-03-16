@@ -48,6 +48,9 @@ class ConnectivityProvider extends ChangeNotifier {
         );
       });
     } else {
+      connectivityController.add(
+        ConnectivityStatus.CONNECTED,
+      );
       ConnectivityService()
           .onStatusChange
           .listen((ConnectivityStatus connectivityStatus) {
