@@ -12,7 +12,7 @@ enum ConnectivityStatusType { Connectivity, Ping }
 class ConnectivityProvider extends ChangeNotifier {
   StreamController<ConnectivityStatus> connectivityController =
       StreamController<ConnectivityStatus>();
-
+  StreamSubscription<ConnectivityResult> _subscription;
   Stream<ConnectivityStatus> get connectivityStream =>
       connectivityController.stream;
   ConnectivityStatusType type;
@@ -20,6 +20,14 @@ class ConnectivityProvider extends ChangeNotifier {
     type = ConnectivityStatusType.Ping,
   }) {
     _updateConnectivityStatus();
+  }
+
+  @mustCallSuper
+  void dispose() {
+    if (_subscription != null) {
+      _subscription.cancel();
+    }
+    super.dispose();
   }
 
   _updateConnectivityStatus() async {
@@ -30,7 +38,9 @@ class ConnectivityProvider extends ChangeNotifier {
             ? ConnectivityStatus.DISCONNECTED
             : ConnectivityStatus.CONNECTED,
       );
-      Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      _subscription = Connectivity()
+          .onConnectivityChanged
+          .listen((ConnectivityResult result) {
         connectivityController.add(
           result == ConnectivityResult.none
               ? ConnectivityStatus.DISCONNECTED
