@@ -10,6 +10,11 @@ import 'package:flutter/material.dart';
 enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
 
 class ConnectivityProvider extends ChangeNotifier {
+  ConnectivityProvider({
+    this.type = ConnectivityStatusType.Ping,
+  }) {
+    _updateConnectivityStatus();
+  }
   StreamController<ConnectivityStatus> connectivityController =
       StreamController<ConnectivityStatus>();
 
@@ -17,11 +22,6 @@ class ConnectivityProvider extends ChangeNotifier {
   Stream<ConnectivityStatus> get connectivityStream =>
       connectivityController.stream;
   ConnectivityStatusType type;
-  ConnectivityProvider({
-    type = ConnectivityStatusType.Ping,
-  }) {
-    _updateConnectivityStatus();
-  }
 
   @mustCallSuper
   void dispose() {
@@ -32,7 +32,24 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   _updateConnectivityStatus() async {
-    if (type == ConnectivityStatusType.Connectivity) {
+    if (type == ConnectivityStatusType.Ping) {
+      connectivityController.add(
+        ConnectivityStatus.CONNECTED,
+      );
+      ConnectivityService()
+          .onStatusChange
+          .listen((ConnectivityStatus connectivityStatus) {
+        connectivityController.add(connectivityStatus);
+      });
+    } else if (type == ConnectivityStatusType.AlwaysOffline) {
+      connectivityController.add(
+        ConnectivityStatus.DISCONNECTED,
+      );
+    } else if (type == ConnectivityStatusType.AlwaysOnline) {
+      connectivityController.add(
+        ConnectivityStatus.CONNECTED,
+      );
+    } else {
       var connectivityResult = await (Connectivityswift().checkConnectivity());
       connectivityController.add(
         connectivityResult == ConnectivityResult.none
@@ -47,23 +64,6 @@ class ConnectivityProvider extends ChangeNotifier {
               ? ConnectivityStatus.DISCONNECTED
               : ConnectivityStatus.CONNECTED,
         );
-      });
-    } else if (type == ConnectivityStatusType.AlwaysOffline) {
-      connectivityController.add(
-        ConnectivityStatus.DISCONNECTED,
-      );
-    } else if (type == ConnectivityStatusType.AlwaysOnline) {
-      connectivityController.add(
-        ConnectivityStatus.CONNECTED,
-      );
-    } else {
-      connectivityController.add(
-        ConnectivityStatus.CONNECTED,
-      );
-      ConnectivityService()
-          .onStatusChange
-          .listen((ConnectivityStatus connectivityStatus) {
-        connectivityController.add(connectivityStatus);
       });
     }
   }
