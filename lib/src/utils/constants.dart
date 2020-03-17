@@ -40,3 +40,19 @@ const TextStyle defaultMessageStyle = TextStyle(
 /// Connected: Device connected to network
 /// Disconnected: Device not connected to any network
 enum ConnectivityStatus { CONNECTED, DISCONNECTED }
+enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
+
+ConnectivityStatusType getConnectivityStatusTypeFromString(String statusType) {
+  switch (statusType) {
+    case "connectivity":
+      return ConnectivityStatusType.Connectivity;
+    case "ping":
+      return ConnectivityStatusType.Ping;
+    case "alwaysonline":
+      return ConnectivityStatusType.AlwaysOnline;
+    case "alwaysoffline":
+      return ConnectivityStatusType.AlwaysOffline;
+    default:
+      return ConnectivityStatusType.Connectivity;
+  }
+}

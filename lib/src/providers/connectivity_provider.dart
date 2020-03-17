@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 
 /// [ConnectivityProvider] event ChangeNotifier class for ConnectivityStatus .
 /// which extends [ChangeNotifier].
-enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
 
 class ConnectivityProvider extends ChangeNotifier {
   ConnectivityProvider({
