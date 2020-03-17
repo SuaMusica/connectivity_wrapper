@@ -7,11 +7,12 @@ import 'package:flutter/material.dart';
 
 /// [ConnectivityProvider] event ChangeNotifier class for ConnectivityStatus .
 /// which extends [ChangeNotifier].
-enum ConnectivityStatusType { Connectivity, Ping }
+enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
 
 class ConnectivityProvider extends ChangeNotifier {
   StreamController<ConnectivityStatus> connectivityController =
       StreamController<ConnectivityStatus>();
+
   StreamSubscription<ConnectivityResult> _subscription;
   Stream<ConnectivityStatus> get connectivityStream =>
       connectivityController.stream;
@@ -47,6 +48,14 @@ class ConnectivityProvider extends ChangeNotifier {
               : ConnectivityStatus.CONNECTED,
         );
       });
+    } else if (type == ConnectivityStatusType.AlwaysOffline) {
+      connectivityController.add(
+        ConnectivityStatus.DISCONNECTED,
+      );
+    } else if (type == ConnectivityStatusType.AlwaysOnline) {
+      connectivityController.add(
+        ConnectivityStatus.CONNECTED,
+      );
     } else {
       connectivityController.add(
         ConnectivityStatus.CONNECTED,
