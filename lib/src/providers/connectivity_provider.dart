@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivityswift/connectivityswift.dart';
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
@@ -32,13 +32,13 @@ class ConnectivityProvider extends ChangeNotifier {
 
   _updateConnectivityStatus() async {
     if (type == ConnectivityStatusType.Connectivity) {
-      var connectivityResult = await (Connectivity().checkConnectivity());
+      var connectivityResult = await (Connectivityswift().checkConnectivity());
       connectivityController.add(
         connectivityResult == ConnectivityResult.none
             ? ConnectivityStatus.DISCONNECTED
             : ConnectivityStatus.CONNECTED,
       );
-      _subscription = Connectivity()
+      _subscription = Connectivityswift()
           .onConnectivityChanged
           .listen((ConnectivityResult result) {
         connectivityController.add(
