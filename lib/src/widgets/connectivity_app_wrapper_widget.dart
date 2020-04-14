@@ -23,7 +23,7 @@ class ConnectivityAppWrapper extends StatelessWidget {
     return StreamProvider<ConnectivityStatus>(
       create: (context) => ConnectivityProvider(
         type: type,
-      ).connectivityStream,
+      ).stream,
       child: app,
     );
   }

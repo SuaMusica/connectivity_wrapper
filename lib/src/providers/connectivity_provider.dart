@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivityswift/connectivityswift.dart';
+
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,9 @@ class ConnectivityProvider extends ChangeNotifier {
       StreamController<ConnectivityStatus>();
 
   StreamSubscription<ConnectivityResult> _subscription;
-  Stream<ConnectivityStatus> get connectivityStream =>
-      connectivityController.stream;
+  Stream<ConnectivityStatus> get stream => connectivityController.stream;
   ConnectivityStatusType type;
+  final Connectivityswift _connectivity = Connectivityswift();
 
   @mustCallSuper
   void dispose() {
@@ -30,40 +31,30 @@ class ConnectivityProvider extends ChangeNotifier {
     super.dispose();
   }
 
+  void changeStatus(ConnectivityResult result) =>
+      result == ConnectivityResult.none ? setOffline() : setOnline();
+
+  void setOnline() => connectivityController.add(ConnectivityStatus.CONNECTED);
+  void setOffline() =>
+      connectivityController.add(ConnectivityStatus.DISCONNECTED);
+
   _updateConnectivityStatus() async {
     if (type == ConnectivityStatusType.Ping) {
-      connectivityController.add(
-        ConnectivityStatus.CONNECTED,
-      );
+      setOnline();
       ConnectivityService()
           .onStatusChange
           .listen((ConnectivityStatus connectivityStatus) {
         connectivityController.add(connectivityStatus);
       });
     } else if (type == ConnectivityStatusType.AlwaysOffline) {
-      connectivityController.add(
-        ConnectivityStatus.DISCONNECTED,
-      );
+      setOffline();
     } else if (type == ConnectivityStatusType.AlwaysOnline) {
-      connectivityController.add(
-        ConnectivityStatus.CONNECTED,
-      );
+      setOnline();
     } else {
-      var connectivityResult = await (Connectivityswift().checkConnectivity());
-      connectivityController.add(
-        connectivityResult == ConnectivityResult.none
-            ? ConnectivityStatus.DISCONNECTED
-            : ConnectivityStatus.CONNECTED,
-      );
-      _subscription = Connectivityswift()
-          .onConnectivityChanged
-          .listen((ConnectivityResult result) {
-        connectivityController.add(
-          result == ConnectivityResult.none
-              ? ConnectivityStatus.DISCONNECTED
-              : ConnectivityStatus.CONNECTED,
-        );
-      });
+      var connectivityResult = await (_connectivity.checkConnectivity());
+      changeStatus(connectivityResult);
+      _subscription = _connectivity.onConnectivityChanged
+          .listen((ConnectivityResult result) => changeStatus(result));
     }
   }
 }
