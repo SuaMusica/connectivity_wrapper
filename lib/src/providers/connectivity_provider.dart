@@ -15,11 +15,11 @@ class ConnectivityProvider extends ChangeNotifier {
   }) {
     _updateConnectivityStatus();
   }
-  StreamController<ConnectivityStatus> connectivityController =
-      StreamController<ConnectivityStatus>();
+
+  bool isConnected() => _isConnected ?? true;
+  bool _isConnected;
 
   StreamSubscription<ConnectivityResult> _subscription;
-  Stream<ConnectivityStatus> get stream => connectivityController.stream;
   ConnectivityStatusType type;
   final Connectivityswift _connectivity = Connectivityswift();
 
@@ -31,12 +31,20 @@ class ConnectivityProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  void changeStatus(ConnectivityResult result) =>
+  void changeResult(ConnectivityResult result) =>
       result == ConnectivityResult.none ? setOffline() : setOnline();
+  void changeStatus(ConnectivityStatus result) =>
+      result == ConnectivityStatus.DISCONNECTED ? setOffline() : setOnline();
 
-  void setOnline() => connectivityController.add(ConnectivityStatus.CONNECTED);
-  void setOffline() =>
-      connectivityController.add(ConnectivityStatus.DISCONNECTED);
+  void setOnline() {
+    _isConnected = true;
+    notifyListeners();
+  }
+
+  void setOffline() {
+    _isConnected = false;
+    notifyListeners();
+  }
 
   _updateConnectivityStatus() async {
     if (type == ConnectivityStatusType.Ping) {
@@ -44,7 +52,11 @@ class ConnectivityProvider extends ChangeNotifier {
       ConnectivityService()
           .onStatusChange
           .listen((ConnectivityStatus connectivityStatus) {
-        connectivityController.add(connectivityStatus);
+        if (connectivityStatus == ConnectivityStatus.CONNECTED) {
+          setOnline();
+        } else {
+          setOffline();
+        }
       });
     } else if (type == ConnectivityStatusType.AlwaysOffline) {
       setOffline();
@@ -52,9 +64,9 @@ class ConnectivityProvider extends ChangeNotifier {
       setOnline();
     } else {
       var connectivityResult = await (_connectivity.checkConnectivity());
-      changeStatus(connectivityResult);
+      changeResult(connectivityResult);
       _subscription = _connectivity.onConnectivityChanged
-          .listen((ConnectivityResult result) => changeStatus(result));
+          .listen((ConnectivityResult result) => changeResult(result));
     }
   }
 }

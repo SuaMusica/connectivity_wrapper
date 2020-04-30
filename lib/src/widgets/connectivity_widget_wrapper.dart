@@ -1,3 +1,4 @@
+import 'package:connectivity_wrapper/src/providers/connectivity_provider.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +42,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
     this.message,
     this.messageStyle,
     this.height,
-    this.offlineWidget,
+    @required this.offlineWidget,
     this.stacked = true,
     this.alignment,
     this.disableInteraction = false,
@@ -69,8 +70,6 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isOffline = Provider.of<ConnectivityStatus>(context) !=
-        ConnectivityStatus.CONNECTED;
     var finalOfflineWidget = Align(
       alignment: alignment ?? Alignment.bottomCenter,
       child: offlineWidget ??
@@ -87,39 +86,33 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
             ),
           ),
     );
-
-    if (stacked)
-      return Stack(
-        children: <Widget>[
-          child,
-          disableInteraction && isOffline
-              ? Column(
-                  children: <Widget>[
-                    Flexible(
-                      child: Container(
-                        decoration: decoration ??
-                            BoxDecoration(
-                              color: Colors.black38,
-                            ),
-                      ),
-                    )
-                  ],
-                )
-              : CustomConnContainerWidget(),
-          isOffline ? finalOfflineWidget : CustomConnContainerWidget(),
-        ],
-      );
-
-    return isOffline ? finalOfflineWidget : child;
-  }
-}
-
-class CustomConnContainerWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 0.0,
-      height: 0.0,
+    return Consumer<ConnectivityProvider>(
+      builder: (_, notifier, consumerChild) {
+        final isOffline = !notifier.isConnected();
+        return stacked
+            ? Stack(
+                children: <Widget>[
+                  consumerChild,
+                  disableInteraction && isOffline
+                      ? Column(
+                          children: <Widget>[
+                            Flexible(
+                              child: Container(
+                                decoration: decoration ??
+                                    BoxDecoration(
+                                      color: Colors.black38,
+                                    ),
+                              ),
+                            )
+                          ],
+                        )
+                      : Container(),
+                  isOffline ? finalOfflineWidget : Container(),
+                ],
+              )
+            : (notifier.isConnected() ? finalOfflineWidget : consumerChild);
+      },
+      child: child,
     );
   }
 }

@@ -20,10 +20,10 @@ class ConnectivityAppWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<ConnectivityStatus>(
-      create: (context) => ConnectivityProvider(
+    return ChangeNotifierProvider<ConnectivityProvider>(
+      create: (_) => ConnectivityProvider(
         type: type,
-      ).stream,
+      ),
       child: app,
     );
   }
