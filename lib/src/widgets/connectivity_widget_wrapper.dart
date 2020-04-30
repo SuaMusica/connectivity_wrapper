@@ -110,7 +110,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
                   isOffline ? finalOfflineWidget : Container(),
                 ],
               )
-            : (notifier.isConnected() ? finalOfflineWidget : consumerChild);
+            : (isOffline ? finalOfflineWidget : consumerChild);
       },
       child: child,
     );
