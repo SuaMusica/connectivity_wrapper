@@ -42,7 +42,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
     this.message,
     this.messageStyle,
     this.height,
-    @required this.offlineWidget,
+    this.offlineWidget,
     this.stacked = true,
     this.alignment,
     this.disableInteraction = false,
