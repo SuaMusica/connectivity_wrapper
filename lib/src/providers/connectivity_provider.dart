@@ -47,21 +47,16 @@ class ConnectivityProvider extends ChangeNotifier {
       changeType(ConnectivityStatusType.Connectivity);
 
   void setOnline() {
-    print("MY GOD HERE IT IS: setOnline");
-
     _isConnected = true;
     notifyListeners();
   }
 
   void setOffline() {
-    print("MY GOD HERE IT IS: setOffline");
-
     _isConnected = false;
     notifyListeners();
   }
 
   _updateConnectivityStatus() async {
-    print("MY GOD HERE IT IS: $type");
     if (type == ConnectivityStatusType.Ping) {
       setOnline();
       ConnectivityService()
