@@ -36,17 +36,32 @@ class ConnectivityProvider extends ChangeNotifier {
   void changeStatus(ConnectivityStatus result) =>
       result == ConnectivityStatus.DISCONNECTED ? setOffline() : setOnline();
 
+  void changeType(ConnectivityStatusType t) {
+    if (type != t) {
+      type = t;
+      _updateConnectivityStatus();
+    }
+  }
+
+  void changeToConnectivity() =>
+      changeType(ConnectivityStatusType.Connectivity);
+
   void setOnline() {
+    print("MY GOD HERE IT IS: setOnline");
+
     _isConnected = true;
     notifyListeners();
   }
 
   void setOffline() {
+    print("MY GOD HERE IT IS: setOffline");
+
     _isConnected = false;
     notifyListeners();
   }
 
   _updateConnectivityStatus() async {
+    print("MY GOD HERE IT IS: $type");
     if (type == ConnectivityStatusType.Ping) {
       setOnline();
       ConnectivityService()
