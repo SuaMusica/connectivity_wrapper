@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:connectivityswift/connectivityswift.dart';
+import 'package:connectivity/connectivity.dart';
 
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
@@ -21,7 +21,7 @@ class ConnectivityProvider extends ChangeNotifier {
 
   StreamSubscription<ConnectivityResult> _subscription;
   ConnectivityStatusType type;
-  final Connectivityswift _connectivity = Connectivityswift();
+  final _connectivity = Connectivity();
 
   @mustCallSuper
   void dispose() {
