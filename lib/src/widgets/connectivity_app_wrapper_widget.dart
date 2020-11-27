@@ -10,11 +10,12 @@ class ConnectivityAppWrapper extends StatelessWidget {
   /// [type] will accept ConnectivityStatusType enum
   final Widget app;
   final ConnectivityStatusType type;
-
+  final Duration delay;
   const ConnectivityAppWrapper({
     Key key,
     @required this.app,
     this.type = ConnectivityStatusType.Ping,
+    this.delay = const Duration(seconds: 0),
   })  : assert(app != null),
         super(key: key);
 
@@ -23,6 +24,7 @@ class ConnectivityAppWrapper extends StatelessWidget {
     return ChangeNotifierProvider<ConnectivityProvider>(
       create: (_) => ConnectivityProvider(
         type: type,
+        delay: delay,
       ),
       child: app,
     );
