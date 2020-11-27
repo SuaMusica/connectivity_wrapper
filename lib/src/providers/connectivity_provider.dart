@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 class ConnectivityProvider extends ChangeNotifier {
   ConnectivityProvider({
     this.type = ConnectivityStatusType.Ping,
+    this.delay = const Duration(seconds: 0),
   }) {
     _updateConnectivityStatus();
   }
@@ -21,6 +22,7 @@ class ConnectivityProvider extends ChangeNotifier {
 
   StreamSubscription<ConnectivityResult> _subscription;
   ConnectivityStatusType type;
+  Duration delay;
   final _connectivity = Connectivity();
 
   @mustCallSuper
@@ -75,8 +77,15 @@ class ConnectivityProvider extends ChangeNotifier {
     } else {
       var connectivityResult = await (_connectivity.checkConnectivity());
       changeResult(connectivityResult);
-      _subscription = _connectivity.onConnectivityChanged
-          .listen((ConnectivityResult result) => changeResult(result));
+      _subscription = _connectivity.onConnectivityChanged.listen(
+        (ConnectivityResult result) {
+          if (delay.inMilliseconds == 0) {
+            changeResult(result);
+          } else {
+            Future.delayed(delay, () => changeResult(result));
+          }
+        },
+      );
     }
   }
 }

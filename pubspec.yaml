@@ -10,8 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^4.3.1
-  connectivity: ^0.4.9
+  provider: ^4.3.2
+  connectivity: ^2.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
