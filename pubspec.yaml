@@ -5,13 +5,13 @@ author: Ajay Kumar <ajay.kumar@nonstopio.com>
 homepage: https://github.com/ajaynonstopio/connectivity_wrapper
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^4.3.2
-  connectivity: ^2.0.2
+  provider: ^5.0.0
+  connectivity: ^3.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

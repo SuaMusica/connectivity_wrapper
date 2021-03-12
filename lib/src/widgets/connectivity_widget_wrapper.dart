@@ -8,22 +8,22 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
   final Widget child;
 
   /// The [offlineWidget] contained by the ConnectivityWidgetWrapper.
-  final Widget offlineWidget;
+  final Widget? offlineWidget;
 
   /// The decoration to paint behind the [child].
-  final Decoration decoration;
+  final Decoration? decoration;
 
   /// The color to paint behind the [child].
-  final Color color;
+  final Color? color;
 
   /// Disconnected message.
-  final String message;
+  final String? message;
 
   /// If non-null, the style to use for this text.
-  final TextStyle messageStyle;
+  final TextStyle? messageStyle;
 
   /// widget height.
-  final double height;
+  final double? height;
 
   /// widget height.
   final bool stacked;
@@ -32,11 +32,11 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
   final bool disableInteraction;
 
   /// How to align the offline widget.
-  final AlignmentGeometry alignment;
+  final AlignmentGeometry? alignment;
 
   const ConnectivityWidgetWrapper({
-    Key key,
-    this.child,
+    Key? key,
+    required this.child,
     this.color,
     this.decoration,
     this.message,
@@ -46,27 +46,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
     this.stacked = true,
     this.alignment,
     this.disableInteraction = false,
-  })  : assert(
-          decoration == null || offlineWidget == null,
-          'Cannot provide both a color and a offlineWidget\n',
-        ),
-        assert(
-          height == null || offlineWidget == null,
-          'Cannot provide both a height and a offlineWidget\n',
-        ),
-        assert(
-          messageStyle == null || offlineWidget == null,
-          'Cannot provide both a messageStyle and a offlineWidget\n',
-        ),
-        assert(
-          message == null || offlineWidget == null,
-          'Cannot provide both a message and a offlineWidget\n',
-        ),
-        assert(
-            color == null || decoration == null,
-            'Cannot provide both a color and a decoration\n'
-            'The color argument is just a shorthand for "decoration: new BoxDecoration(color: color)".'),
-        super(key: key);
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +72,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
         return stacked
             ? Stack(
                 children: <Widget>[
-                  consumerChild,
+                  consumerChild!,
                   disableInteraction && isOffline
                       ? Column(
                           children: <Widget>[
@@ -110,7 +90,7 @@ class ConnectivityWidgetWrapper extends StatelessWidget {
                   isOffline ? finalOfflineWidget : Container(),
                 ],
               )
-            : (isOffline ? finalOfflineWidget : consumerChild);
+            : (isOffline ? finalOfflineWidget : consumerChild!);
       },
       child: child,
     );

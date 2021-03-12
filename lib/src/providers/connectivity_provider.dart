@@ -18,18 +18,16 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   bool isConnected() => _isConnected ?? true;
-  bool _isConnected;
+  bool? _isConnected;
 
-  StreamSubscription<ConnectivityResult> _subscription;
+  StreamSubscription<ConnectivityResult>? _subscription;
   ConnectivityStatusType type;
   Duration delay;
   final _connectivity = Connectivity();
 
   @mustCallSuper
   void dispose() {
-    if (_subscription != null) {
-      _subscription.cancel();
-    }
+    _subscription?.cancel();
     super.dispose();
   }
 
