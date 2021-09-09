@@ -6,3 +6,5 @@ library connectivity_wrapper;
 export 'package:connectivity_wrapper/src/providers/connectivity_provider.dart';
 export 'package:connectivity_wrapper/src/widgets/connectivity_app_wrapper_widget.dart';
 export 'package:connectivity_wrapper/src/widgets/connectivity_widget_wrapper.dart';
+export 'package:connectivity_wrapper/src/utils/constants.dart';
+
