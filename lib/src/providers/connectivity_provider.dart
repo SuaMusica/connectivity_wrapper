@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:connectivity/connectivity.dart';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
