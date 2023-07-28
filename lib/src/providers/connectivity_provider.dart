@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 /// [ConnectivityProvider] event ChangeNotifier class for ConnectivityStatus .
 /// which extends [ChangeNotifier].
@@ -56,30 +57,36 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   _updateConnectivityStatus() async {
+    int timesWasListened = 0;
     if (type == ConnectivityStatusType.Ping) {
       setOnline();
-      ConnectivityService()
-          .onStatusChange
-          .listen((ConnectivityStatus connectivityStatus) {
-        if (connectivityStatus == ConnectivityStatus.CONNECTED) {
-          setOnline();
-        } else {
-          setOffline();
-        }
-      });
+      ConnectivityService().onStatusChange.listen(
+        (ConnectivityStatus connectivityStatus) {
+          if (connectivityStatus == ConnectivityStatus.CONNECTED) {
+            setOnline();
+          } else {
+            setOffline();
+          }
+        },
+      );
     } else if (type == ConnectivityStatusType.AlwaysOffline) {
       setOffline();
     } else if (type == ConnectivityStatusType.AlwaysOnline) {
       setOnline();
     } else {
-      var connectivityResult = await (_connectivity.checkConnectivity());
-      changeResult(connectivityResult);
+      if (timesWasListened == 0) {
+        changeResult(ConnectivityResult.other);
+      }
+
       _subscription = _connectivity.onConnectivityChanged.listen(
         (ConnectivityResult result) {
-          if (delay.inMilliseconds == 0) {
-            changeResult(result);
-          } else {
-            Future.delayed(delay, () => changeResult(result));
+          timesWasListened++;
+          if (timesWasListened > 1) {
+            if (delay.inMilliseconds == 0) {
+              changeResult(result);
+            } else {
+              Future.delayed(delay, () => changeResult(result));
+            }
           }
         },
       );
