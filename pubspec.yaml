@@ -4,13 +4,13 @@ version: 1.0.7
 homepage: https://github.com/ajaynonstopio/connectivity_wrapper
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   provider: ^6.0.4
-  connectivity_plus: ^3.0.2
+  connectivity_plus: ^5.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
