@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^6.0.4
-  connectivity_plus: ^5.0.2
+  provider: ^6.1.5+1
+  connectivity_plus: ^7.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

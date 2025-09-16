@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// More info on why default port is 53
@@ -40,6 +39,7 @@ const TextStyle defaultMessageStyle = TextStyle(
 /// Connected: Device connected to network
 /// Disconnected: Device not connected to any network
 enum ConnectivityStatus { CONNECTED, DISCONNECTED }
+
 enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
 
 ConnectivityStatusType getConnectivityStatusTypeFromString(String statusType) {

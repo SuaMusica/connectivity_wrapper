@@ -19,7 +19,7 @@ class ConnectivityProvider extends ChangeNotifier {
   bool isConnected() => _isConnected ?? true;
   bool? _isConnected;
 
-  StreamSubscription<ConnectivityResult>? _subscription;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
   ConnectivityStatusType type;
   Duration delay;
   final _connectivity = Connectivity();
@@ -30,8 +30,8 @@ class ConnectivityProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  void changeResult(ConnectivityResult result) =>
-      result == ConnectivityResult.none ? setOffline() : setOnline();
+  void changeResult(List<ConnectivityResult> result) =>
+      result.contains(ConnectivityResult.none) ? setOffline() : setOnline();
   void changeStatus(ConnectivityStatus result) =>
       result == ConnectivityStatus.DISCONNECTED ? setOffline() : setOnline();
 
@@ -75,7 +75,7 @@ class ConnectivityProvider extends ChangeNotifier {
       var connectivityResult = await (_connectivity.checkConnectivity());
       changeResult(connectivityResult);
       _subscription = _connectivity.onConnectivityChanged.listen(
-        (ConnectivityResult result) {
+        (List<ConnectivityResult> result) {
           if (delay.inMilliseconds == 0) {
             changeResult(result);
           } else {
