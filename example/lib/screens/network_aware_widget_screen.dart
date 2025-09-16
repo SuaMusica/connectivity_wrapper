@@ -58,3 +58,4 @@ class NetworkAwareWidgetScreen extends StatelessWidget {
     );
   }
 }
+
