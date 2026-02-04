@@ -16,8 +16,18 @@ class ConnectivityProvider extends ChangeNotifier {
     _updateConnectivityStatus();
   }
 
-  bool isConnected() => _isConnected ?? true;
+  bool isConnected({bool ignoreOfflineForced = false}) =>
+      (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
+
   bool? _isConnected;
+  bool? _isOfflineForced;
+
+  bool get isOfflineForced => _isOfflineForced ?? false;
+
+  void setOfflineForced(bool value) {
+    _isOfflineForced = value;
+    notifyListeners();
+  }
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   ConnectivityStatusType type;
