@@ -8,6 +8,8 @@ import 'custom_offline_widget_screen.dart';
 import 'network_aware_widget_screen.dart';
 
 class MenuScreen extends StatelessWidget {
+  const MenuScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,4 +46,3 @@ class MenuScreen extends StatelessWidget {
     );
   }
 }
-
