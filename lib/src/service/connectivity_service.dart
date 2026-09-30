@@ -41,14 +41,14 @@ class ConnectivityService {
   Future<AddressCheckResult> isHostReachable(
     AddressCheckOptions options,
   ) async {
-    Socket sock;
+    Socket? sock;
     try {
       sock = await Socket.connect(
         options.address,
         options.port,
         timeout: options.timeout,
       );
-      sock?.destroy();
+      sock.destroy();
       return AddressCheckResult(options, true);
     } catch (e) {
       sock?.destroy();
@@ -71,12 +71,14 @@ class ConnectivityService {
   }
 
   Future<ConnectivityStatus> get connectionStatus async {
-    return await hasConnection ? ConnectivityStatus.CONNECTED : ConnectivityStatus.DISCONNECTED;
+    return await hasConnection
+        ? ConnectivityStatus.CONNECTED
+        : ConnectivityStatus.DISCONNECTED;
   }
 
   Duration checkInterval = DEFAULT_INTERVAL;
 
-  _maybeEmitStatusUpdate([Timer timer]) async {
+  _maybeEmitStatusUpdate([Timer? timer]) async {
     _timerHandle?.cancel();
     timer?.cancel();
 
@@ -92,10 +94,11 @@ class ConnectivityService {
     _lastStatus = currentStatus;
   }
 
-  ConnectivityStatus _lastStatus;
-  Timer _timerHandle;
+  ConnectivityStatus? _lastStatus;
+  Timer? _timerHandle;
 
-  StreamController<ConnectivityStatus> _statusController = StreamController.broadcast();
+  StreamController<ConnectivityStatus> _statusController =
+      StreamController.broadcast();
 
   Stream<ConnectivityStatus> get onStatusChange => _statusController.stream;
 

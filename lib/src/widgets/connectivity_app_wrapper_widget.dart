@@ -12,12 +12,11 @@ class ConnectivityAppWrapper extends StatelessWidget {
   final ConnectivityStatusType type;
   final Duration delay;
   const ConnectivityAppWrapper({
-    Key key,
-    @required this.app,
+    Key? key,
+    required this.app,
     this.type = ConnectivityStatusType.Ping,
     this.delay = const Duration(seconds: 0),
-  })  : assert(app != null),
-        super(key: key);
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

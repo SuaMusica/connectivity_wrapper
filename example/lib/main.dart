@@ -1,6 +1,7 @@
 import 'package:connectivity_wrapper/connectivity_wrapper.dart';
-import 'package:connectivity_wrapper_example/screens/menu_screen.dart';
 import 'package:flutter/material.dart';
+
+import 'screens/menu_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,6 +15,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
         ),
         home: MenuScreen(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

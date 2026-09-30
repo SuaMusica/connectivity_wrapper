@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:connectivity/connectivity.dart';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
@@ -17,24 +16,34 @@ class ConnectivityProvider extends ChangeNotifier {
     _updateConnectivityStatus();
   }
 
-  bool isConnected() => _isConnected ?? true;
-  bool _isConnected;
+  bool isConnected({bool ignoreOfflineForced = false}) =>
+      (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
 
-  StreamSubscription<ConnectivityResult> _subscription;
+  bool? _isConnected;
+  bool? _isOfflineForced;
+
+  bool get isOfflineForced => _isOfflineForced ?? false;
+
+  void setOfflineForced(bool value, {bool shouldNotify = true}) {
+    _isOfflineForced = value;
+    if (shouldNotify) {
+      notifyListeners();
+    }
+  }
+
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
   ConnectivityStatusType type;
   Duration delay;
   final _connectivity = Connectivity();
 
   @mustCallSuper
   void dispose() {
-    if (_subscription != null) {
-      _subscription.cancel();
-    }
+    _subscription?.cancel();
     super.dispose();
   }
 
-  void changeResult(ConnectivityResult result) =>
-      result == ConnectivityResult.none ? setOffline() : setOnline();
+  void changeResult(List<ConnectivityResult> result) =>
+      result.contains(ConnectivityResult.none) ? setOffline() : setOnline();
   void changeStatus(ConnectivityStatus result) =>
       result == ConnectivityStatus.DISCONNECTED ? setOffline() : setOnline();
 
@@ -78,7 +87,7 @@ class ConnectivityProvider extends ChangeNotifier {
       var connectivityResult = await (_connectivity.checkConnectivity());
       changeResult(connectivityResult);
       _subscription = _connectivity.onConnectivityChanged.listen(
-        (ConnectivityResult result) {
+        (List<ConnectivityResult> result) {
           if (delay.inMilliseconds == 0) {
             changeResult(result);
           } else {

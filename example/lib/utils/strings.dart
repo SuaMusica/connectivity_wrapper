@@ -11,3 +11,4 @@ class Strings {
 
   static const String offlineMessage = "You are Offline!";
 }
+
