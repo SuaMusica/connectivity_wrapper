@@ -38,8 +38,14 @@ class ConnectivityProvider extends ChangeNotifier {
 
   NetworkReachabilityStatus? get reachabilityStatus => _reachabilityStatus;
 
-  bool get _hasValidatedInternet =>
-      _reachabilityStatus == NetworkReachabilityStatus.online;
+  /// Enquanto o nativo não responde, não tratar como offline (evita race no boot).
+  bool get _hasValidatedInternet => switch (_reachabilityStatus) {
+        null => true,
+        NetworkReachabilityStatus.online => true,
+        NetworkReachabilityStatus.limited ||
+        NetworkReachabilityStatus.offline =>
+          false,
+      };
 
   bool? _isConnected;
   bool? _isOfflineForced;
