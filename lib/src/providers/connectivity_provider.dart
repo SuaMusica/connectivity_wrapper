@@ -17,24 +17,32 @@ class ConnectivityProvider extends ChangeNotifier {
     _updateConnectivityStatus();
   }
 
-  bool isConnected({bool ignoreOfflineForced = false}) =>
-      (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
+  bool isConnected({bool ignoreOfflineForced = false}) {
+    if (!ignoreOfflineForced && (_isOfflineForced ?? false)) {
+      return false;
+    }
 
-  bool isConnected2({bool ignoreOfflineForced = false}) =>
-      (_isConnected ?? true) &&
-      (!isOfflineForced || ignoreOfflineForced) &&
-      !isLimited;
+    return switch (type) {
+      ConnectivityStatusType.AlwaysOffline => false,
+      ConnectivityStatusType.AlwaysOnline => true,
+      ConnectivityStatusType.Ping => _isConnected ?? true,
+      ConnectivityStatusType.Validated ||
+      ConnectivityStatusType.Connectivity =>
+        (_isConnected ?? true) && _hasValidatedInternet,
+    };
+  }
 
   /// Rede com transporte mas sem internet validada (captive portal, etc.).
   bool get isLimited => reachabilityStatus == NetworkReachabilityStatus.limited;
 
   NetworkReachabilityStatus? get reachabilityStatus => _reachabilityStatus;
 
+  bool get _hasValidatedInternet =>
+      _reachabilityStatus == NetworkReachabilityStatus.online;
+
   bool? _isConnected;
   bool? _isOfflineForced;
   NetworkReachabilityStatus? _reachabilityStatus;
-
-  bool get isOfflineForced => _isOfflineForced ?? false;
 
   void setOfflineForced(bool value, {bool shouldNotify = true}) {
     _isOfflineForced = value;
@@ -83,10 +91,14 @@ class ConnectivityProvider extends ChangeNotifier {
 
   void _applyReachability(NetworkReachabilityStatus status) {
     _reachabilityStatus = status;
-    if (status == NetworkReachabilityStatus.online) {
-      setOnline();
+    if (type == ConnectivityStatusType.Validated) {
+      if (status == NetworkReachabilityStatus.online) {
+        setOnline();
+      } else {
+        setOffline();
+      }
     } else {
-      setOffline();
+      notifyListeners();
     }
   }
 
@@ -98,39 +110,41 @@ class ConnectivityProvider extends ChangeNotifier {
     NativeConnectivity.getCurrentStatus().then(_applyReachability);
   }
 
-  _updateConnectivityStatus() async {
+  Future<void> _updateConnectivityStatus() async {
     _subscription?.cancel();
     _nativeSubscription?.cancel();
 
-    if (type == ConnectivityStatusType.Ping) {
-      setOnline();
-      ConnectivityService()
-          .onStatusChange
-          .listen((ConnectivityStatus connectivityStatus) {
-        if (connectivityStatus == ConnectivityStatus.CONNECTED) {
-          setOnline();
-        } else {
-          setOffline();
-        }
-      });
-    } else if (type == ConnectivityStatusType.Validated) {
-      _listenValidatedConnectivity();
-    } else if (type == ConnectivityStatusType.AlwaysOffline) {
-      setOffline();
-    } else if (type == ConnectivityStatusType.AlwaysOnline) {
-      setOnline();
-    } else {
-      var connectivityResult = await (_connectivity.checkConnectivity());
-      changeResult(connectivityResult);
-      _subscription = _connectivity.onConnectivityChanged.listen(
-        (List<ConnectivityResult> result) {
-          if (delay.inMilliseconds == 0) {
-            changeResult(result);
+    switch (type) {
+      case ConnectivityStatusType.Ping:
+        setOnline();
+        ConnectivityService()
+            .onStatusChange
+            .listen((ConnectivityStatus connectivityStatus) {
+          if (connectivityStatus == ConnectivityStatus.CONNECTED) {
+            setOnline();
           } else {
-            Future.delayed(delay, () => changeResult(result));
+            setOffline();
           }
-        },
-      );
+        });
+      case ConnectivityStatusType.Validated:
+        _listenValidatedConnectivity();
+      case ConnectivityStatusType.AlwaysOffline:
+        setOffline();
+      case ConnectivityStatusType.AlwaysOnline:
+        setOnline();
+      case ConnectivityStatusType.Connectivity:
+        _listenValidatedConnectivity();
+        final connectivityResult = await _connectivity.checkConnectivity();
+        changeResult(connectivityResult);
+        _subscription = _connectivity.onConnectivityChanged.listen(
+          (List<ConnectivityResult> result) {
+            if (delay.inMilliseconds == 0) {
+              changeResult(result);
+            } else {
+              Future.delayed(delay, () => changeResult(result));
+            }
+          },
+        );
     }
   }
 }
