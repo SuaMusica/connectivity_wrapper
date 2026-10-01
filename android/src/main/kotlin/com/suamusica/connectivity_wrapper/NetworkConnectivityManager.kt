@@ -6,6 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
+import android.util.Log
 
 class NetworkConnectivityManager(
     private val context: Context,
@@ -55,7 +56,8 @@ class NetworkConnectivityManager(
             networkCallback?.let {
                 try {
                     connectivityManager.unregisterNetworkCallback(it)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.w(TAG, "stopMonitoring: failed to unregister callback", e)
                 }
             }
             networkCallback = null
@@ -64,7 +66,9 @@ class NetworkConnectivityManager(
 
     private fun emitStatus(status: ConnectivityStatus) {
         if (currentStatus == status) return
+        val previous = currentStatus
         currentStatus = status
+        Log.d(TAG, "status $previous -> $status")
         onStatusChanged?.invoke(status)
     }
 
@@ -86,8 +90,9 @@ class NetworkConnectivityManager(
     }
 
     private fun statusFromCapabilities(capabilities: NetworkCapabilities): ConnectivityStatus {
-        val validated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        if (validated) return ConnectivityStatus.ONLINE
+        if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+            return ConnectivityStatus.ONLINE
+        }
 
         val captive = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
             capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)
@@ -108,4 +113,8 @@ class NetworkConnectivityManager(
     }
 
     fun currentStatus(): ConnectivityStatus = checkCurrentStatus()
+
+    companion object {
+        private const val TAG = "ConnectivityWrapper"
+    }
 }

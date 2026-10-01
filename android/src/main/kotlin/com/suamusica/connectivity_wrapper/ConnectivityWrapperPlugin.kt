@@ -1,6 +1,8 @@
 package com.suamusica.connectivity_wrapper
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -52,16 +54,23 @@ class ConnectivityWrapperPlugin : FlutterPlugin, MethodChannel.MethodCallHandler
 private class ConnectivityStatusStreamHandler(
     private val context: Context,
 ) : EventChannel.StreamHandler {
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var manager: NetworkConnectivityManager? = null
     private var eventSink: EventChannel.EventSink? = null
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         eventSink = events
         manager = NetworkConnectivityManager(context) { status ->
-            events?.success(status.toWire())
+            val wire = status.toWire()
+            mainHandler.post {
+                eventSink?.success(wire)
+            }
         }
         manager?.startMonitoring()
-        events?.success(manager?.currentStatus()?.toWire())
+        val initial = manager?.currentStatus()?.toWire()
+        mainHandler.post {
+            eventSink?.success(initial)
+        }
     }
 
     override fun onCancel(arguments: Any?) {
