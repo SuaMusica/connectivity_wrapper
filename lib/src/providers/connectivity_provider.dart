@@ -18,7 +18,7 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   bool isConnected({bool ignoreOfflineForced = false}) {
-    if (!ignoreOfflineForced && (_isOfflineForced ?? false)) {
+    if (!ignoreOfflineForced && isOfflineForced) {
       return false;
     }
 
@@ -31,6 +31,8 @@ class ConnectivityProvider extends ChangeNotifier {
         (_isConnected ?? true) && _hasValidatedInternet,
     };
   }
+
+  bool get isOfflineForced => _isOfflineForced ?? false;
 
   /// Rede com transporte mas sem internet validada (captive portal, etc.).
   bool get isLimited => reachabilityStatus == NetworkReachabilityStatus.limited;
