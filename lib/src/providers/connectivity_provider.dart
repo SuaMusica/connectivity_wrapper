@@ -18,17 +18,16 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   bool isConnected({bool ignoreOfflineForced = false}) {
-    if (!ignoreOfflineForced && isOfflineForced) {
-      return false;
-    }
+    final hasTransport =
+        (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
 
     return switch (type) {
       ConnectivityStatusType.AlwaysOffline => false,
       ConnectivityStatusType.AlwaysOnline => true,
-      ConnectivityStatusType.Ping => _isConnected ?? true,
+      ConnectivityStatusType.Ping => hasTransport,
       ConnectivityStatusType.Validated ||
       ConnectivityStatusType.Connectivity =>
-        (_isConnected ?? true) && _hasValidatedInternet,
+        hasTransport && _hasValidatedInternet,
     };
   }
 
