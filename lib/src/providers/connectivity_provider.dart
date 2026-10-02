@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:connectivity_wrapper/src/platform/native_connectivity.dart';
 import 'package:connectivity_wrapper/src/service/connectivity_service.dart';
 import 'package:connectivity_wrapper/src/utils/constants.dart';
 import 'package:flutter/material.dart';
@@ -16,13 +17,39 @@ class ConnectivityProvider extends ChangeNotifier {
     _updateConnectivityStatus();
   }
 
-  bool isConnected({bool ignoreOfflineForced = false}) =>
-      (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
+  bool isConnected({bool ignoreOfflineForced = false}) {
+    final hasTransport =
+        (_isConnected ?? true) && (!isOfflineForced || ignoreOfflineForced);
+
+    return switch (type) {
+      ConnectivityStatusType.AlwaysOffline => false,
+      ConnectivityStatusType.AlwaysOnline => true,
+      ConnectivityStatusType.Ping => hasTransport,
+      ConnectivityStatusType.Validated ||
+      ConnectivityStatusType.Connectivity =>
+        hasTransport && _hasValidatedInternet,
+    };
+  }
+
+  bool get isOfflineForced => _isOfflineForced ?? false;
+
+  /// Rede com transporte mas sem internet validada (captive portal, etc.).
+  bool get isLimited => reachabilityStatus == NetworkReachabilityStatus.limited;
+
+  NetworkReachabilityStatus? get reachabilityStatus => _reachabilityStatus;
+
+  /// Enquanto o nativo não responde, não tratar como offline (evita race no boot).
+  bool get _hasValidatedInternet => switch (_reachabilityStatus) {
+        null => true,
+        NetworkReachabilityStatus.online => true,
+        NetworkReachabilityStatus.limited ||
+        NetworkReachabilityStatus.offline =>
+          false,
+      };
 
   bool? _isConnected;
   bool? _isOfflineForced;
-
-  bool get isOfflineForced => _isOfflineForced ?? false;
+  NetworkReachabilityStatus? _reachabilityStatus;
 
   void setOfflineForced(bool value, {bool shouldNotify = true}) {
     _isOfflineForced = value;
@@ -32,6 +59,7 @@ class ConnectivityProvider extends ChangeNotifier {
   }
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
+  StreamSubscription<NetworkReachabilityStatus>? _nativeSubscription;
   ConnectivityStatusType type;
   Duration delay;
   final _connectivity = Connectivity();
@@ -39,6 +67,7 @@ class ConnectivityProvider extends ChangeNotifier {
   @mustCallSuper
   void dispose() {
     _subscription?.cancel();
+    _nativeSubscription?.cancel();
     super.dispose();
   }
 
@@ -67,34 +96,62 @@ class ConnectivityProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  _updateConnectivityStatus() async {
-    if (type == ConnectivityStatusType.Ping) {
-      setOnline();
-      ConnectivityService()
-          .onStatusChange
-          .listen((ConnectivityStatus connectivityStatus) {
-        if (connectivityStatus == ConnectivityStatus.CONNECTED) {
-          setOnline();
-        } else {
-          setOffline();
-        }
-      });
-    } else if (type == ConnectivityStatusType.AlwaysOffline) {
-      setOffline();
-    } else if (type == ConnectivityStatusType.AlwaysOnline) {
-      setOnline();
+  void _applyReachability(NetworkReachabilityStatus status) {
+    _reachabilityStatus = status;
+    if (type == ConnectivityStatusType.Validated) {
+      if (status == NetworkReachabilityStatus.online) {
+        setOnline();
+      } else {
+        setOffline();
+      }
     } else {
-      var connectivityResult = await (_connectivity.checkConnectivity());
-      changeResult(connectivityResult);
-      _subscription = _connectivity.onConnectivityChanged.listen(
-        (List<ConnectivityResult> result) {
-          if (delay.inMilliseconds == 0) {
-            changeResult(result);
+      notifyListeners();
+    }
+  }
+
+  void _listenValidatedConnectivity() {
+    _nativeSubscription?.cancel();
+    _nativeSubscription = NativeConnectivity.onStatusChange.listen(
+      _applyReachability,
+    );
+    NativeConnectivity.getCurrentStatus().then(_applyReachability);
+  }
+
+  Future<void> _updateConnectivityStatus() async {
+    _subscription?.cancel();
+    _nativeSubscription?.cancel();
+
+    switch (type) {
+      case ConnectivityStatusType.Ping:
+        setOnline();
+        ConnectivityService()
+            .onStatusChange
+            .listen((ConnectivityStatus connectivityStatus) {
+          if (connectivityStatus == ConnectivityStatus.CONNECTED) {
+            setOnline();
           } else {
-            Future.delayed(delay, () => changeResult(result));
+            setOffline();
           }
-        },
-      );
+        });
+      case ConnectivityStatusType.Validated:
+        _listenValidatedConnectivity();
+      case ConnectivityStatusType.AlwaysOffline:
+        setOffline();
+      case ConnectivityStatusType.AlwaysOnline:
+        setOnline();
+      case ConnectivityStatusType.Connectivity:
+        _listenValidatedConnectivity();
+        final connectivityResult = await _connectivity.checkConnectivity();
+        changeResult(connectivityResult);
+        _subscription = _connectivity.onConnectivityChanged.listen(
+          (List<ConnectivityResult> result) {
+            if (delay.inMilliseconds == 0) {
+              changeResult(result);
+            } else {
+              Future.delayed(delay, () => changeResult(result));
+            }
+          },
+        );
     }
   }
 }

@@ -4,8 +4,10 @@ import 'package:connectivity_wrapper_example/utils/ui_helper.dart';
 import 'package:flutter/material.dart';
 
 class ScaffoldExampleScreen extends StatefulWidget {
+  const ScaffoldExampleScreen({super.key});
+
   @override
-  _ScaffoldExampleScreenState createState() => _ScaffoldExampleScreenState();
+  State<ScaffoldExampleScreen> createState() => _ScaffoldExampleScreenState();
 }
 
 class _ScaffoldExampleScreenState extends State<ScaffoldExampleScreen> {
@@ -49,7 +51,7 @@ class _ScaffoldExampleScreenState extends State<ScaffoldExampleScreen> {
                   if (_customDecoration) {
                     _decoration = BoxDecoration(
                       color: Colors.purple,
-                      gradient: new LinearGradient(
+                      gradient: LinearGradient(
                         colors: [Colors.red, Colors.cyan],
                       ),
                     );

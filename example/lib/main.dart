@@ -6,9 +6,12 @@ import 'screens/menu_screen.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ConnectivityAppWrapper(
+      type: ConnectivityStatusType.Connectivity,
       app: MaterialApp(
         title: 'Connectivity Wrapper Example',
         theme: ThemeData(
