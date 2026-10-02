@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConnectivityAppWrapper(
+      type: ConnectivityStatusType.Connectivity,
       app: MaterialApp(
         title: 'Connectivity Wrapper Example',
         theme: ThemeData(
