@@ -40,7 +40,17 @@ const TextStyle defaultMessageStyle = TextStyle(
 /// Disconnected: Device not connected to any network
 enum ConnectivityStatus { CONNECTED, DISCONNECTED }
 
-enum ConnectivityStatusType { Connectivity, Ping, AlwaysOnline, AlwaysOffline }
+/// Native network reachability (validated / limited / offline).
+enum NetworkReachabilityStatus { online, limited, offline }
+
+enum ConnectivityStatusType {
+  Connectivity,
+  Ping,
+  /// activeNetwork / NWPath — sem probe DNS.
+  Validated,
+  AlwaysOnline,
+  AlwaysOffline,
+}
 
 ConnectivityStatusType getConnectivityStatusTypeFromString(String statusType) {
   switch (statusType) {
@@ -48,6 +58,8 @@ ConnectivityStatusType getConnectivityStatusTypeFromString(String statusType) {
       return ConnectivityStatusType.Connectivity;
     case "ping":
       return ConnectivityStatusType.Ping;
+    case "validated":
+      return ConnectivityStatusType.Validated;
     case "alwaysonline":
       return ConnectivityStatusType.AlwaysOnline;
     case "alwaysoffline":

@@ -4,6 +4,8 @@ import 'package:connectivity_wrapper_example/utils/ui_helper.dart';
 import 'package:flutter/material.dart';
 
 class CustomOfflineWidgetScreen extends StatelessWidget {
+  const CustomOfflineWidgetScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,28 +28,27 @@ class CustomOfflineWidgetScreen extends StatelessWidget {
 }
 
 class OfflineWidget extends StatelessWidget {
+  const OfflineWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Image(
-            height: 300,
-            image: AssetImage('assets/dog.gif'),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Image(
+          height: 300,
+          image: AssetImage('assets/dog.gif'),
+        ),
+        Padding5(),
+        Center(
+          child: Text(
+            Strings.offlineMessage,
+            style: TextStyle(color: Colors.white, fontSize: 30.0),
           ),
-          Padding5(),
-          Center(
-            child: Text(
-              Strings.offlineMessage,
-              style: TextStyle(color: Colors.white, fontSize: 30.0),
-            ),
-          ),
-          Padding5(),
-        ],
-      ),
+        ),
+        Padding5(),
+      ],
     );
   }
 }
-

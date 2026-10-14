@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class NetworkAwareWidgetScreen extends StatelessWidget {
+  const NetworkAwareWidgetScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,4 +60,3 @@ class NetworkAwareWidgetScreen extends StatelessWidget {
     );
   }
 }
-
