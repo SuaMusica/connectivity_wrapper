@@ -22,7 +22,11 @@ public class ConnectivityWrapperPlugin: NSObject, FlutterPlugin, FlutterStreamHa
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "getCurrentStatus":
-            result(connectivityManager.currentStatus().toWire())
+            connectivityManager.currentStatus { status in
+                DispatchQueue.main.async {
+                    result(status.toWire())
+                }
+            }
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -30,19 +34,16 @@ public class ConnectivityWrapperPlugin: NSObject, FlutterPlugin, FlutterStreamHa
 
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
-        connectivityManager.onStatusChanged = { [weak self] status in
+        connectivityManager.startMonitoring { [weak self] status in
             DispatchQueue.main.async {
                 self?.eventSink?(status.toWire())
             }
         }
-        connectivityManager.startMonitoring()
-        events(connectivityManager.currentStatus().toWire())
         return nil
     }
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
         connectivityManager.stopMonitoring()
-        connectivityManager.onStatusChanged = nil
         eventSink = nil
         return nil
     }
