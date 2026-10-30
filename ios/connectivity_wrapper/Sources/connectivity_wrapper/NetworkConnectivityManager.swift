@@ -20,55 +20,84 @@ extension ConnectivityStatus {
 
 /// Mirrors Android [NetworkConnectivityManager] using only system reachability signals
 /// (NWPath + SCNetworkReachability), without app-level HTTP/DNS probes.
+///
+/// All mutable state is confined to `queue`. Public methods never block the caller:
+/// they hop onto `queue` and report back through callbacks.
 final class NetworkConnectivityManager {
-    private var monitor: NWPathMonitor?
     private let queue = DispatchQueue(label: "com.suamusica.connectivity_wrapper.network")
+    private var monitor: NWPathMonitor?
+    private var probeMonitor: NWPathMonitor?
     private var latestPath: NWPath?
-    private let lock = NSLock()
-    private var isMonitoring = false
-    private var lastEmittedStatus: ConnectivityStatus = .offline
-    var onStatusChanged: ((ConnectivityStatus) -> Void)?
+    private var lastEmittedStatus: ConnectivityStatus?
+    private var onStatusChanged: ((ConnectivityStatus) -> Void)?
+    private var pendingStatusRequests: [(ConnectivityStatus) -> Void] = []
 
-    func startMonitoring() {
-        guard !isMonitoring else { return }
-        isMonitoring = true
-        let pathMonitor = NWPathMonitor()
-        monitor = pathMonitor
-        pathMonitor.pathUpdateHandler = { [weak self] path in
-            self?.handlePathUpdate(path)
+    /// The first `NWPath` delivered after start is the current state, so it is emitted
+    /// right away (no separate initial read needed). `onStatusChanged` runs on `queue`.
+    func startMonitoring(onStatusChanged: @escaping (ConnectivityStatus) -> Void) {
+        queue.async {
+            self.onStatusChanged = onStatusChanged
+            guard self.monitor == nil else { return }
+            self.lastEmittedStatus = nil
+            let pathMonitor = NWPathMonitor()
+            self.monitor = pathMonitor
+            pathMonitor.pathUpdateHandler = { [weak self] path in
+                self?.handlePathUpdate(path)
+            }
+            pathMonitor.start(queue: self.queue)
         }
-        pathMonitor.start(queue: queue)
     }
 
     func stopMonitoring() {
-        guard isMonitoring else { return }
-        isMonitoring = false
-        monitor?.cancel()
-        monitor = nil
+        queue.async {
+            self.onStatusChanged = nil
+            self.monitor?.cancel()
+            self.monitor = nil
+            self.latestPath = nil
+            self.lastEmittedStatus = nil
+        }
     }
 
-    func currentStatus() -> ConnectivityStatus {
-        lock.lock()
-        let path = latestPath
-        lock.unlock()
+    /// `completion` runs on `queue`.
+    func currentStatus(completion: @escaping (ConnectivityStatus) -> Void) {
+        queue.async {
+            if let path = self.latestPath {
+                completion(self.status(from: path))
+                return
+            }
+            self.pendingStatusRequests.append(completion)
+            if self.monitor == nil {
+                self.startProbe()
+            }
+        }
+    }
 
-        if let path {
-            return status(from: path)
+    /// One-shot path read for `getCurrentStatus` calls made while nobody listens.
+    private func startProbe() {
+        guard probeMonitor == nil else { return }
+        let probe = NWPathMonitor()
+        probeMonitor = probe
+        probe.pathUpdateHandler = { [weak self] path in
+            guard let self else { return }
+            self.probeMonitor?.cancel()
+            self.probeMonitor = nil
+            self.resolvePendingStatusRequests(with: path)
         }
-        if let path = Self.fetchCurrentPathSync() {
-            lock.lock()
-            latestPath = path
-            lock.unlock()
-            return status(from: path)
-        }
-        return legacyReachabilityStatus()
+        probe.start(queue: queue)
     }
 
     private func handlePathUpdate(_ path: NWPath) {
-        lock.lock()
         latestPath = path
-        lock.unlock()
+        resolvePendingStatusRequests(with: path)
         emit(status(from: path))
+    }
+
+    private func resolvePendingStatusRequests(with path: NWPath) {
+        guard !pendingStatusRequests.isEmpty else { return }
+        let status = status(from: path)
+        let requests = pendingStatusRequests
+        pendingStatusRequests.removeAll()
+        requests.forEach { $0(status) }
     }
 
     /// Parallel to Android [statusFromCapabilities]: validated path -> online;
@@ -115,33 +144,11 @@ final class NetworkConnectivityManager {
     }
 
     private func emit(_ status: ConnectivityStatus) {
-        lock.lock()
-        guard lastEmittedStatus != status else {
-            lock.unlock()
-            return
-        }
+        guard lastEmittedStatus != status else { return }
         let previous = lastEmittedStatus
         lastEmittedStatus = status
-        lock.unlock()
-        NSLog("[ConnectivityWrapper] status %@ -> %@", previous.toWire(), status.toWire())
+        NSLog("[ConnectivityWrapper] status %@ -> %@", previous?.toWire() ?? "none", status.toWire())
         onStatusChanged?(status)
-    }
-
-    private static func fetchCurrentPathSync(timeout: TimeInterval = 2) -> NWPath? {
-        let monitor = NWPathMonitor()
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: NWPath?
-
-        monitor.pathUpdateHandler = { path in
-            result = path
-            semaphore.signal()
-            monitor.cancel()
-        }
-        monitor.start(queue: DispatchQueue.global(qos: .utility))
-        if semaphore.wait(timeout: .now() + timeout) == .timedOut {
-            monitor.cancel()
-        }
-        return result
     }
 
     private struct ReachabilityFlags {
@@ -173,18 +180,5 @@ final class NetworkConnectivityManager {
             interventionRequired: flags.contains(.interventionRequired),
             connectionRequired: flags.contains(.connectionRequired)
         )
-    }
-
-    private func legacyReachabilityStatus() -> ConnectivityStatus {
-        guard let flags = currentReachabilityFlags() else {
-            return .offline
-        }
-        if !flags.reachable {
-            return .offline
-        }
-        if flags.interventionRequired || flags.connectionRequired {
-            return .limited
-        }
-        return .online
     }
 }
